@@ -1,0 +1,51 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © hunkOfTuna
+// Enter long when all conditions:
+//   - RSI less than 50%
+//   - Closing price crosses under lower bollinger band
+//   - SMA is in up trend
+
+//@version=4
+
+strategy(title='hunkOfTuna: Bollinger + RSI Strategy',
+     shorttitle='hot-bol-rsi-str',
+     overlay=true,
+     pyramiding = 0,
+     precision = 1,
+     default_qty_type = strategy.percent_of_equity,
+     default_qty_value = 20.0,
+     currency = "USD",
+     initial_capital = 50000,
+     commission_type = strategy.commission.percent,
+     commission_value = 0.1)
+
+tf = input(title="BBands Timeframe", type=input.resolution, defval="5")
+len = input(title="Length", type=input.integer, defval=20)
+stddev = input(title='StdDev', type=input.integer, defval=2)
+
+start = input(title="Backtesting start time",type = input.time, defval = timestamp("1 Mar 2021 10:00 +1000"))
+end = input(title= "Backtesting end time",type = input.time, defval = timestamp("16 Apr 2021 10:00 +1000"))
+
+longSMA = sma(close, 48)
+rsi = rsi(close, 24)
+atr = atr(14)
+
+[middle, upper, lower] = bb(close, len, stddev)
+hbbandsMid = security(syminfo.tickerid, tf, middle, barmerge.gaps_on, barmerge.lookahead_off)
+hbbandsUpper = security(syminfo.tickerid, tf, upper, barmerge.gaps_on, barmerge.lookahead_off)
+hbbandsLower = security(syminfo.tickerid, tf, lower, barmerge.gaps_on, barmerge.lookahead_off)
+
+plot(longSMA, title = "Long SMA", color = color.purple)
+plot(hbbandsMid, title = "BB Middle", color = color.silver, transp = 50, style = plot.style_circles)
+plot(hbbandsUpper, title = "BB Upper", color = color.gray, transp = 50)
+plot(hbbandsLower, title = "BB Lower", color = color.silver, transp = 50)
+plot(rsi, title = "RSI", display = display.none)
+
+longCondition = crossunder(close, hbbandsLower) and rsi < 50 and longSMA > longSMA[1]
+
+stopLoss = low - atr * 4
+takeProfit = high + atr * 4
+
+if time >= start and time <= end
+    strategy.entry("long", strategy.long, when = longCondition, limit = low)
+    strategy.exit("exit", "long", stop = stopLoss, limit=takeProfit)
