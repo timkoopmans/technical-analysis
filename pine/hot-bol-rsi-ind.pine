@@ -10,30 +10,26 @@ study(title='hunkOfTuna: Bollinger + RSI Indicator',
      shorttitle='hot-bol-rsi-ind',
      overlay=true)
 
-tf = input(title="BBands Timeframe", type=input.resolution, defval="5")
-len = input(title="Length", type=input.integer, defval=20)
+bbResolution = input(title="BB Timeframe", type=input.resolution, defval="30")
+bbPeriods = input(title="BB Periods", type=input.integer, defval=20)
 stddev = input(title='StdDev', type=input.integer, defval=2)
+smaPeriods = input(title='SMA Periods', type=input.integer, defval=200)
+rsiPeriods = input(title='RSI Periods', type=input.integer, defval=60)
+atrWidth = input(title='ATR Width', type=input.integer, defval=30)
+longSMA = sma(close, smaPeriods)
+rsi = rsi(close, rsiPeriods)
+atr = atr(atrWidth)
 
-longSMA = sma(close, 48)
-rsi = rsi(close, 24)
-atr = atr(14)
-
-[middle, upper, lower] = bb(close, len, stddev)
-hbbandsMid = security(syminfo.tickerid, tf, middle, barmerge.gaps_on, barmerge.lookahead_off)
-hbbandsUpper = security(syminfo.tickerid, tf, upper, barmerge.gaps_on, barmerge.lookahead_off)
-hbbandsLower = security(syminfo.tickerid, tf, lower, barmerge.gaps_on, barmerge.lookahead_off)
-
-plot(longSMA, title = "Long SMA", color = color.purple)
-plot(hbbandsMid, title = "BB Middle", color = color.silver, transp = 50, style = plot.style_circles)
-plot(hbbandsUpper, title = "BB Upper", color = color.gray, transp = 50)
-plot(hbbandsLower, title = "BB Lower", color = color.silver, transp = 50)
-plot(rsi, title = "RSI", display = display.none)
+[middle, upper, lower] = bb(close, bbPeriods, stddev)
+hbbandsMid = security(syminfo.tickerid, bbResolution, middle, barmerge.gaps_on, barmerge.lookahead_off)
+hbbandsUpper = security(syminfo.tickerid, bbResolution, upper, barmerge.gaps_on, barmerge.lookahead_off)
+hbbandsLower = security(syminfo.tickerid, bbResolution, lower, barmerge.gaps_on, barmerge.lookahead_off)
 
 longCondition = crossunder(close, hbbandsLower) and rsi < 50 and longSMA > longSMA[1]
 
 stopLoss = low - atr * 4
-takeProfit = high + atr * 4
+takeProfit = high + atr * 8
 
 bgcolor(longCondition == 0 ? na : color.purple)
-plotshape(longCondition,"Buy",color=color.purple,text="Buy",location=location.belowbar,style=shape.triangleup,size=size.tiny,textcolor=color.purple)
-alertcondition(longCondition, title='hOT-Bol Indicator: alert', message='Go long')
+plotshape(longCondition,"Buy",color=color.purple,text="",location=location.belowbar,style=shape.triangleup,size=size.tiny,textcolor=color.purple)
+alertcondition(longCondition, title='hot-bol-rsi-ind: alert', message='Go long')
