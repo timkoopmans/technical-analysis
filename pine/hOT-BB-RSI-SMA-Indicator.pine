@@ -6,8 +6,8 @@
 //   - SMA is in up trend
 
 //@version=4
-study(title='hunkOfTuna: Bollinger + RSI Indicator',
-     shorttitle='hot-bol-rsi-ind',
+study(title='hunkOfTuna: BB + RSI + SMA Indicator',
+     shorttitle='hOT-BB-RSI-SMA-Indicator',
      overlay=true)
 
 bbResolution = input(title="BB Timeframe", type=input.resolution, defval="30")
